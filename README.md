@@ -14,3 +14,6 @@ Mouse scroll Zooms in on the model
 1,2,3,4,5,6, load different textures, a simple shader, texture map and solid textures
 
 Q,W,E,R changes the HDR image that is used for the lighting
+
+To Debug and see what textures have been used / written to frame buffers press CTRL + Shift + F while using the demo
+a folder will be created next to the .exe file with images and shader information
