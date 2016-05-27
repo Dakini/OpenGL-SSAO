@@ -1,0 +1,48 @@
+
+#version 420
+
+uniform mat4 uModelViewMatrix;
+uniform mat4 uModelViewProjectionMatrix;
+uniform mat4 uModel;
+
+uniform float uTanHalfFov;
+uniform float uAspectRatio;
+
+layout(location=0) in vec4 aPosition;
+layout(location=1) in vec3 aNormal;
+layout(location=2) in vec3 aTangent;
+layout(location=3) in vec2 aTexcoord;
+
+out VertexDataT {
+	smooth vec3 viewPosition; // view space position
+	smooth vec2 texcoord; // copied through from aTexcoord
+	smooth mat3 tangentViewMatrix; // tangent->view space matrix
+	noperspective vec3 viewRay; // ray to far plane (use linear interpolation)
+	smooth vec3 texcoords2;
+	smooth vec3 normals;
+
+} vertexOut;
+
+void main() {
+//	view space position/texcoord:
+	vertexOut.viewPosition = (uModelViewMatrix * aPosition).xyz;
+	vertexOut.texcoord = aTexcoord;
+	vertexOut.texcoords2 = (uModel* aPosition).xyz;
+//	tangent->view space matrix:
+	vec3 normal = normalize((uModelViewMatrix * vec4(aNormal, 0.0)).xyz);
+	vertexOut.normals = normal;
+	vec3 tangent = normalize((uModelViewMatrix * vec4(aTangent, 0.0)).xyz);
+	vec3 bitangent = cross(tangent, normal);
+	vertexOut.tangentViewMatrix = mat3(tangent, bitangent, normal);
+	
+//	view ray:
+	vertexOut.viewRay = vec3(
+		vertexOut.viewPosition.x * uTanHalfFov * uAspectRatio,
+		vertexOut.viewPosition.y * uTanHalfFov, 
+		1.0
+	);
+	
+//	projected position:
+	gl_Position = uModelViewProjectionMatrix * aPosition;
+	
+}

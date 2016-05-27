@@ -1,0 +1,16 @@
+#version 420
+
+layout(binding=0) uniform sampler2D uLuminanceTex;
+layout(binding=1) uniform sampler2D uPrevLuminanceTex; // previous adapted luminance
+
+uniform float uAdaptionRate = 1.0;
+
+layout(location=0) out float fResult;
+
+/*----------------------------------------------------------------------------*/
+void main() {
+	float avgLum = texture(uLuminanceTex, vec2(0.5)).r;
+	float prevLum = texture(uPrevLuminanceTex, vec2(0.5)).r;
+	float adaptedLum = prevLum + (avgLum - prevLum) * (1.0 - exp2(-uAdaptionRate));
+	fResult = adaptedLum;
+}

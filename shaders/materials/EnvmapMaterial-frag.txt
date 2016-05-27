@@ -1,0 +1,30 @@
+
+#version 420
+
+layout(binding=0) uniform samplerCube uEnvTex;
+layout(binding=4) uniform sampler2D uDepthTex;
+
+uniform mat4 uInverseViewMatrix;
+
+
+in VertexDataT {
+	smooth vec3 position; // view space position
+	smooth vec2 texcoord; // copied through from aTexcoord
+	smooth mat3 tangentViewMatrix; // tangent->view space matrix
+	noperspective vec3 viewRay; // ray to far plane (use linear interpolation)
+
+} vertexIn;
+
+layout(location=0) out vec4 fResult;
+
+/*----------------------------------------------------------------------------*/
+void main() {
+	float depth = texture(uDepthTex, vertexIn.texcoord).r;
+	if (depth >= 1.0) {
+		vec3 texcoord = (uInverseViewMatrix * vec4(vertexIn.viewRay, 0.0)).xyz;	
+		fResult = textureLod(uEnvTex, texcoord, 0);
+	} else {
+		fResult = vec4(0.0);
+	}
+}
+

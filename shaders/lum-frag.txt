@@ -1,0 +1,19 @@
+#version 420
+
+float luminance(in vec3 rgb) {
+	const vec3 kLum = vec3(0.2126, 0.7152, 0.0722);
+	return max(dot(rgb, kLum), 0.0001); // prevent zero result
+}
+
+layout(binding=0) uniform sampler2D uInputTex;
+
+noperspective in vec2 vTexcoord;
+
+layout(location=0) out vec4 fResult;
+
+
+void main() {
+	vec3 color = texture(uInputTex, vTexcoord).rgb;
+	fResult = vec4(luminance(color));
+}
+

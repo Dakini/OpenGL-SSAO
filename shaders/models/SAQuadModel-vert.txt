@@ -1,0 +1,37 @@
+#version 420
+
+uniform float uTanHalfFov = 0.414213568;
+uniform float uAspectRatio = 1.77777779;
+
+layout(location=0) in vec4 aPosition;
+
+out VertexDataT {
+	smooth vec3 position; // view space position
+	smooth vec2 texcoord; // copied through from aTexcoord
+	smooth mat3 tangentViewMatrix; // tangent->view space matrix
+	noperspective vec3 viewRay; // ray to far plane (use linear interpolation)
+
+} vertexOut;
+
+void main() {
+//	view space position/texcoord:
+	vertexOut.position = aPosition.xyz;
+	vertexOut.texcoord = aPosition.xy * 0.5 + 0.5;
+		
+//	tangent->view space matrix:
+	vec3 normal = vec3(0.0, 0.0, -1.0);
+	vec3 tangent = vec3(1.0, 0.0, 0.0);
+	vec3 bitangent = vec3(0.0, 1.0, 0.0);
+	vertexOut.tangentViewMatrix = mat3(tangent, bitangent, normal);
+	
+//	view ray:
+	vertexOut.viewRay = vec3(
+		aPosition.x * uTanHalfFov * uAspectRatio,
+		aPosition.y * uTanHalfFov, 
+		1.0
+	);
+	
+//	projected position:
+	gl_Position = aPosition;
+
+}

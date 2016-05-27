@@ -1,0 +1,58 @@
+#version 420
+vec3 encodeNormal(in vec3 normal) {
+	vec3 result;
+	result = normal * 0.5 + 0.5;
+	return result;
+}
+
+//	surface textures:
+layout(binding=0) uniform sampler2D uDiffuseTex;
+layout(binding=1) uniform sampler2D uNormalTex;
+layout(binding=2) uniform sampler2D uDetailTex;
+layout(binding=3) uniform sampler2D uSpecularTex; // r = level, g = exponent, b = metallic
+
+//	surface properties:
+uniform vec3 uDiffuseColor = vec3(1.0);
+uniform float uSpecularLevel = 1.0;
+uniform float uSpecularExponent = 1.0;
+uniform float uMetallicLevel = 1.0;
+uniform vec2 uDetailTexScale = vec2(2.5);
+
+in VertexDataT {
+	smooth vec3 viewPosition; // view space position
+	smooth vec2 texcoord; // copied through from aTexcoord
+	smooth mat3 tangentViewMatrix; // tangent->view space matrix
+	noperspective vec3 viewRay; // ray to far plane (use linear interpolation)
+	smooth vec3 texcoords2;
+	smooth vec3 normals;
+} vertexIn;
+	
+layout(location=0) out vec4 fAlbedoSpecularColor;
+layout(location=1) out vec4 fMaterialProperties;
+layout(location=2) out vec4 fGeometricProperties;
+
+
+/*----------------------------------------------------------------------------*/
+void main() {
+//	get surface properties:
+	vec4 kd = texture(uDiffuseTex, vertexIn.texcoord/**12.5f*/);//0 + vec4(0,0.3,0,1);
+
+
+	vec3 n = texture(uNormalTex, vertexIn.texcoord).xyz * 2.0 - 1.0;
+	n += texture(uDetailTex, vertexIn.texcoord * uDetailTexScale).xyz * 2.0 - 1.0;
+	n = normalize(vertexIn.tangentViewMatrix * n);
+	
+	vec4 specular = texture(uSpecularTex, vertexIn.texcoord) * vec4(uSpecularLevel, uSpecularExponent, uMetallicLevel, 0.0);
+	float ks = specular.r;
+	float ke = specular.g;
+	float km = specular.b;
+
+//	output results:
+	fAlbedoSpecularColor = kd;
+	fMaterialProperties = vec4(ks, ke, km, 1.0);
+	
+	fGeometricProperties.rgb = encodeNormal(n);
+	fGeometricProperties.a = 1.0;
+	
+
+}
